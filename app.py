@@ -238,15 +238,14 @@ def gerar_e_salvar():
     entry_data.delete(0, tk.END)
 
     # Opcional: abrir pasta
-    if messagebox.askyesno("Abrir pasta?", "Deseja abrir a pasta com os certificados?"):
+    if messagebox.askyesno("Abrir Certificado?", "Deseja abrir o certificado?"):
         import subprocess, sys
-        if sys.platform.startswith("win"):
-            subprocess.Popen(f'explorer "{os.path.abspath(OUT_DIR)}"')
-        elif sys.platform.startswith("darwin"):
-            subprocess.Popen(["open", os.path.abspath(OUT_DIR)])
-        else:
-            subprocess.Popen(["xdg-open", os.path.abspath(OUT_DIR)])
-
+        if sys.platform.startswith('win'):
+            os.startfile(os.path.abspath(arquivo))
+        elif sys.platform.startswith('darwin'):
+            subprocess.Popen(['open', os.path.abspath(arquivo)])
+        else: 
+            subprocess.Popen(["xdg-open", os.path.abspath(arquivo)])
 
 # Monta a janela
 init_db()
