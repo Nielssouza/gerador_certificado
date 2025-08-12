@@ -6,6 +6,7 @@ from tkinter import messagebox, filedialog
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
+from reportlab.pdfbase.pdfmetrics import stringWidth
 from PIL import Image, ImageTk
 import pandas as pd
 
@@ -46,8 +47,30 @@ def salvar_registro(nome, evento, data_emissao, numero):
     conn.commit()
     conn.close()
 
+def draw_multiline_text_centered(c, text, center_x, start_y, max_width, line_height, font_name="Helvetica", font_size=14):
+    c.setFont(font_name, font_size)
+    words = text.split()
+    line = ""
+    y_offset = 0
 
-# ---------- Gerar PDF com ReportLab ----------
+    for word in words:
+        test_line = line + (word + " ")
+        text_width = stringWidth(test_line, font_name, font_size)
+        if text_width <= max_width:
+            line = test_line
+        else:
+            # centralizar linha atual
+            line_width = stringWidth(line, font_name, font_size)
+            c.drawString(center_x - line_width/2, start_y - y_offset, line.strip())
+            line = word + " "
+            y_offset += line_height
+
+    if line:
+        line_width = stringWidth(line, font_name, font_size)
+        c.drawString(center_x - line_width/2, start_y - y_offset, line.strip())
+
+
+# ---------- Gerar PDF ----------
 def gerar_certificado_pdf(nome, evento, data_emissao, numero, arquivo_saida):
     # landscape A4
     c = canvas.Canvas(arquivo_saida, pagesize=landscape(A4))
@@ -71,11 +94,17 @@ def gerar_certificado_pdf(nome, evento, data_emissao, numero, arquivo_saida):
 
     # Texto detalhado (quebrado em 2 linhas para ficar melhor)
     c.setFont("Helvetica", 14)
-    linha1 = ("Concluiu com sucesso o curso de Teologia realizado pela Igreja Evangélica Assembleia de Deus")
-    linha2 = ("Ministério Missão, sediada em Av. Sen. Canedo - Goiânia / Extensão, Sen. Canedo - GO, 75256-207.")
 
-    c.drawCentredString(largura/2, altura - 120*mm, linha1)
-    c.drawCentredString(largura/2, altura - 135*mm, linha2)
+    max_text_width = largura - 60*mm  # 30mm margem de cada lado
+    start_y = altura - 120*mm
+    line_height = 16
+    center_x = largura / 2
+
+    linha1 = f"Concluiu com sucesso o curso de {evento} realizado pela Igreja Evangélica Assembleia de Deus"
+    linha2 = "Ministério Missão, sediada em Av. Sen. Canedo - Goiânia / Extensão, Sen. Canedo - GO, 75256-207."
+
+    draw_multiline_text_centered(c, linha1, center_x, start_y, max_text_width, line_height)
+    draw_multiline_text_centered(c, linha2, center_x, start_y - line_height*3, max_text_width, line_height)
 
     # Data e número do certificado
     c.setFont("Helvetica", 14)
@@ -251,7 +280,7 @@ tk.Label(frame, text="Nome completo:").grid(row=0, column=0, sticky="w")
 entry_nome = tk.Entry(frame, width=50)
 entry_nome.grid(row=0, column=1, pady=4)
 
-tk.Label(frame, text="Evento / Curso:").grid(row=1, column=0, sticky="w")
+tk.Label(frame, text="Curso:").grid(row=1, column=0, sticky="w")
 entry_evento = tk.Entry(frame, width=50)
 entry_evento.grid(row=1, column=1, pady=4)
 
