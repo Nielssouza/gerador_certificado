@@ -2,14 +2,14 @@ import os
 import sqlite3
 from datetime import datetime
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox, filedialog, ttk
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from PIL import Image, ImageTk
 import pandas as pd
-
+from loading_screen import show_loading_screen
 
 
 # ---------- Configs ----------
@@ -247,50 +247,49 @@ def gerar_e_salvar():
         else: 
             subprocess.Popen(["xdg-open", os.path.abspath(arquivo)])
 
-# Monta a janela
-init_db()
-root = tk.Tk()
-root.title("CertiFé")
+def main_app():
+    init_db()
+    root = tk.Tk()
+    root.title("CertiFé")
 
-#Frame para logo + Titulo
-top_frame = tk.Frame(root, padx=12, pady=12)
-top_frame.pack(pady=10)
+    # Frame para logo + Titulo
+    top_frame = tk.Frame(root, padx=12, pady=12)
+    top_frame.pack(pady=10)
 
-#Carregar a logo (PNG)
-logo_img = Image.open("logo.png")
-logo_img = logo_img.resize((100, 100), Image.Resampling.LANCZOS)
+    logo_img = Image.open("logo.png")
+    logo_img = logo_img.resize((100, 100), Image.Resampling.LANCZOS)
+    logo_img = ImageTk.PhotoImage(logo_img)
+    label_logo = tk.Label(top_frame, image=logo_img)
+    label_logo.pack(side="left", padx=10)
+    root.logo_img = logo_img  # evitar garbage collection
 
-#Converter para imagem que o tkinter entende
-logo_img = ImageTk.PhotoImage(logo_img)
+    label_title = tk.Label(top_frame, text="CertiFé", font=("Helvetica", 24, "bold"))
+    label_title.pack(side="left", padx=10)
 
-#label com a logo 
-label_logo = tk.Label(top_frame, image=logo_img)
-label_logo.pack(side="left", padx=10)
-root.logo_img = logo_img
+    frame = tk.Frame(root, padx=12, pady=12)
+    frame.pack()
 
-#Label com o titulo
-label_title = tk.Label(top_frame, text="CertiFé", font=("Helvetica", 24, "bold"))
-label_title.pack(side="left", padx=10)
+    global entry_nome, entry_evento, entry_data  # para usar nas funções
+    tk.Label(frame, text="Nome completo:").grid(row=0, column=0, sticky="w")
+    entry_nome = tk.Entry(frame, width=50)
+    entry_nome.grid(row=0, column=1, pady=4)
 
-frame = tk.Frame(root, padx=12, pady=12)
-frame.pack()
+    tk.Label(frame, text="Curso:").grid(row=1, column=0, sticky="w")
+    entry_evento = tk.Entry(frame, width=50)
+    entry_evento.grid(row=1, column=1, pady=4)
 
-tk.Label(frame, text="Nome completo:").grid(row=0, column=0, sticky="w")
-entry_nome = tk.Entry(frame, width=50)
-entry_nome.grid(row=0, column=1, pady=4)
+    tk.Label(frame, text="Data:").grid(row=2, column=0, sticky="w")
+    entry_data = tk.Entry(frame, width=20)
+    entry_data.grid(row=2, column=1, sticky="w", pady=4)
+    entry_data.insert(0, datetime.today().strftime("%d/%m/%Y"))
 
-tk.Label(frame, text="Curso:").grid(row=1, column=0, sticky="w")
-entry_evento = tk.Entry(frame, width=50)
-entry_evento.grid(row=1, column=1, pady=4)
+    btn = tk.Button(frame, text="Salvar e Gerar PDF", command=gerar_e_salvar, width=20)
+    btn.grid(row=4, column=0, columnspan=2, pady=12)
 
-tk.Label(frame, text="Data:").grid(row=2, column=0, sticky="w")
-entry_data = tk.Entry(frame, width=20)
-entry_data.grid(row=2, column=1, sticky="w", pady=4)
-entry_data.insert(0, datetime.today().strftime("%d/%m/%Y"))
+    btn_lote = tk.Button(frame, text="Gerar em Lote", command=gerar_em_lote, width=20)
+    btn_lote.grid(row=5, column=0, columnspan=2, pady=12)
 
-btn = tk.Button(frame, text="Salvar e Gerar PDF", command=gerar_e_salvar, width=20)
-btn.grid(row=4, column=0, columnspan=2, pady=12)
+    root.mainloop()
 
-btn_lote = tk.Button(frame, text="Gerar em Lote", command=gerar_em_lote, width=20)
-btn_lote.grid(row=5, column=0, columnspan=2, pady=12)
-root.mainloop()
+if __name__ == "__main__":
+    show_loading_screen(main_app)
